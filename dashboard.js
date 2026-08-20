@@ -23,7 +23,7 @@ function statusPillClass(status) {
   return "pending";
 }
 
-function renderSummary(summary) {
+function renderSummary(summary, isAdmin) {
   const branchRows = Object.entries(summary.byBranch)
     .sort((a, b) => b[1] - a[1])
     .map(([branch, count]) => `<tr><td style="text-align:left;">${branch}</td><td>${count}</td></tr>`)
@@ -31,7 +31,10 @@ function renderSummary(summary) {
 
   return `
     <div class="card">
-      <p class="section-title">Summary</p>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <p class="section-title" style="margin:0;">Summary</p>
+        <span class="status-pill ${isAdmin ? "approved" : "pending"}">${isAdmin ? "Viewing: All team POs (Admin)" : "Viewing: Your POs only"}</span>
+      </div>
       <div class="stat-grid">
         <div class="stat-box"><div class="stat-num">${summary.total}</div><div class="stat-label">Total POs</div></div>
         <div class="stat-box"><div class="stat-num" style="color:var(--teal-dark);">${summary.autoApproved}</div><div class="stat-label">Auto Approved</div></div>
@@ -135,7 +138,7 @@ async function init() {
   try {
     const data = await fetchData();
     allPos = data.pos;
-    contentEl.innerHTML = renderSummary(data.summary) + renderFiltersAndTable(allPos);
+    contentEl.innerHTML = renderSummary(data.summary, data.isAdmin) + renderFiltersAndTable(allPos);
     renderRows(allPos);
 
     document.getElementById("searchBox").addEventListener("input", applyFilters);
