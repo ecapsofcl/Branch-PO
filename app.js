@@ -19,6 +19,7 @@
     nameField.disabled = true;
     whatsappField.value = whatsapp;
     whatsappField.disabled = true;
+    window.__lockedRequestedBy = { name, email: user.email || "", whatsapp };
   }
 
   if (meta.full_name && meta.whatsapp) {
@@ -70,12 +71,36 @@ const vendorEl = document.getElementById("vendor");
 const splitUpEl = document.getElementById("splitUp");
 const poPurposeEl = document.getElementById("poPurpose");
 const bucketInputsEl = document.getElementById("bucketInputs");
+const preparedForNameEl = document.getElementById("preparedForName");
+const preparedForEmailEl = document.getElementById("preparedForEmail");
+const preparedForWhatsappEl = document.getElementById("preparedForWhatsapp");
 
 fillSelect(branchEl, BRANCHES, "Select branch");
 fillSelect(productEl, PRODUCTS, "Select product");
 fillSelect(vendorEl, VENDORS, "Select vendor");
 SPLIT_UPS.forEach((s) => { const o = document.createElement("option"); o.value = s; o.textContent = s; splitUpEl.appendChild(o); });
 fillSelect(poPurposeEl, PO_PURPOSES, "Select purpose");
+
+function renderPreparedForOptions() {
+  const branch = branchEl.value;
+  const people = BRANCH_PEOPLE[branch] || [];
+  preparedForEmailEl.value = "";
+  preparedForWhatsappEl.value = "";
+  if (!people.length) {
+    fillSelect(preparedForNameEl, [], "Select branch first");
+    return;
+  }
+  fillSelect(preparedForNameEl, people.map((p) => p.name), "Select person");
+}
+branchEl.addEventListener("change", renderPreparedForOptions);
+
+preparedForNameEl.addEventListener("change", () => {
+  const branch = branchEl.value;
+  const people = BRANCH_PEOPLE[branch] || [];
+  const person = people.find((p) => p.name === preparedForNameEl.value);
+  preparedForEmailEl.value = person ? person.email : "";
+  preparedForWhatsappEl.value = person ? person.whatsapp : "";
+});
 
 function renderBucketInputs() {
   const product = productEl.value;
@@ -143,6 +168,11 @@ document.getElementById("poForm").addEventListener("submit", async (e) => {
   const resultEl = document.getElementById("resultMsg");
   resultEl.innerHTML = "";
 
+  if (!preparedForNameEl.value) {
+    resultEl.innerHTML = `<div class="error-box">Please select who this PO is prepared for.</div>`;
+    return;
+  }
+
   const preview = runPreview();
 
   const payload = {
@@ -160,6 +190,9 @@ document.getElementById("poForm").addEventListener("submit", async (e) => {
     creatorName: document.getElementById("creatorName").value,
     creatorEmail: document.getElementById("creatorEmail").value,
     creatorWhatsapp: document.getElementById("creatorWhatsapp").value,
+    preparedForName: preparedForNameEl.value,
+    preparedForEmail: preparedForEmailEl.value,
+    preparedForWhatsapp: preparedForWhatsappEl.value,
   };
 
   submitBtn.disabled = true;
@@ -190,6 +223,13 @@ document.getElementById("poForm").addEventListener("submit", async (e) => {
     `;
     document.getElementById("poForm").reset();
     renderBucketInputs();
+    renderPreparedForOptions();
+    // form.reset() clears disabled fields too — restore the locked "Requested by" values.
+    if (window.__lockedRequestedBy) {
+      document.getElementById("creatorName").value = window.__lockedRequestedBy.name;
+      document.getElementById("creatorEmail").value = window.__lockedRequestedBy.email;
+      document.getElementById("creatorWhatsapp").value = window.__lockedRequestedBy.whatsapp;
+    }
     document.getElementById("previewCard").style.display = "none";
   } catch (err) {
     resultEl.innerHTML = `<div class="error-box">${err.message}</div>`;
