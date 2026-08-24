@@ -72,6 +72,25 @@
     </div>
 
     <div class="card">
+      <p class="section-title">Prepared for (branch contact)</p>
+      <p class="note" style="margin-top:-6px; margin-bottom:14px;">Pick the branch person this PO is for — they'll get every notification alongside you.</p>
+      <div class="grid">
+        <div class="field">
+          <label for="preparedForName">Name <span class="req">*</span></label>
+          <select id="preparedForName" required><option value="" disabled selected>Select branch first</option></select>
+        </div>
+        <div class="field">
+          <label for="preparedForEmail">Email</label>
+          <input id="preparedForEmail" type="email" disabled placeholder="Auto-filled" />
+        </div>
+        <div class="field">
+          <label for="preparedForWhatsapp">WhatsApp</label>
+          <input id="preparedForWhatsapp" type="tel" disabled placeholder="Auto-filled" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
       <p class="section-title">Stock aging (in Lakhs)</p>
       <div class="field">
         <label for="overallStock">Overall stock value <span class="req">*</span></label>
