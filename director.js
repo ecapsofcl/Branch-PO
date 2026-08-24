@@ -43,6 +43,7 @@ function renderPO(po) {
         <div class="k">Partner</div><div class="v">${po.partner_name || "—"}</div>
         <div class="k">PO attached</div><div class="v">${po.po_attached ? "Yes" : "No"}</div>
         <div class="k">Requested by</div><div class="v">${po.creator_name}</div>
+        <div class="k">Prepared for</div><div class="v">${po.prepared_for_name || "—"}</div>
         <div class="k">Current order value</div><div class="v">₹${po.current_order_value}L</div>
       </div>
 
