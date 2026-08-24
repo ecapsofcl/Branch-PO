@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PO Builder</title>
+<title>Purchase Order Approval System</title>
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -11,12 +11,29 @@
   <header class="top">
     <div class="brand">
       <img src="assets/logo.png" alt="eCAPS" class="logo" />
-      <h1>Purchase Order Builder</h1>
+      <h1>Purchase Order Approval System</h1>
     </div>
     <div class="sub" id="authNav"></div>
   </header>
 
   <p style="font-size:12.5px; color:var(--muted); margin: -8px 0 20px;"><span class="req" style="color:var(--red); font-weight:700;">*</span> Required field</p>
+
+  <div class="card" id="profileSetupCard" style="display:none;">
+    <p class="section-title">Complete your profile</p>
+    <p class="note">We only need this once — it auto-fills every PO you submit and makes sure you get approval notifications on the right number.</p>
+    <div class="grid">
+      <div class="field">
+        <label for="profileName">Your name <span class="req">*</span></label>
+        <input id="profileName" type="text" required />
+      </div>
+      <div class="field">
+        <label for="profileWhatsapp">Your WhatsApp number <span class="req">*</span> <span class="opt">(digits only, no +)</span></label>
+        <input id="profileWhatsapp" type="tel" placeholder="91XXXXXXXXXX" required />
+      </div>
+    </div>
+    <button type="button" class="primary" id="profileSaveBtn">Save &amp; continue</button>
+    <div id="profileMsg"></div>
+  </div>
 
   <form id="poForm">
     <div class="card">
@@ -69,6 +86,7 @@
 
     <div class="card">
       <p class="section-title">Requested by</p>
+      <p class="note" style="margin-top:-6px; margin-bottom:14px;">Auto-filled from your account — contact your admin if anything needs to change.</p>
       <div class="grid">
         <div class="field">
           <label for="creatorName">Your name <span class="req">*</span></label>
