@@ -73,6 +73,8 @@ input, select {
   font-family: inherit; font-size: 14px; background: var(--panel); color: var(--ink);
 }
 input:focus, select:focus { outline: 2px solid var(--focus); outline-offset: 1px; border-color: var(--focus); }
+input[readonly] { background: #f2f2ef; color: var(--muted); cursor: not-allowed; }
+input:disabled { background: #f2f2ef; color: var(--muted); cursor: not-allowed; }
 input[type="checkbox"] { width: auto; }
 
 .field { margin-bottom: 14px; }
