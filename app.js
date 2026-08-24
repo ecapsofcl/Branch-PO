@@ -4,9 +4,49 @@
   if (!session) return;
   renderAuthNav();
   const { data: { user } } = await sb.auth.getUser();
-  if (user && user.email) {
-    const emailField = document.getElementById("creatorEmail");
-    if (emailField && !emailField.value) emailField.value = user.email;
+  if (!user) return;
+
+  const nameField = document.getElementById("creatorName");
+  const emailField = document.getElementById("creatorEmail");
+  const whatsappField = document.getElementById("creatorWhatsapp");
+  const meta = user.user_metadata || {};
+
+  emailField.value = user.email || "";
+  emailField.disabled = true;
+
+  function lockRequestedBy(name, whatsapp) {
+    nameField.value = name;
+    nameField.disabled = true;
+    whatsappField.value = whatsapp;
+    whatsappField.disabled = true;
+  }
+
+  if (meta.full_name && meta.whatsapp) {
+    lockRequestedBy(meta.full_name, meta.whatsapp);
+  } else {
+    // First time here — collect name + WhatsApp once, save to the account, then lock the form.
+    document.getElementById("poForm").style.display = "none";
+    const setupCard = document.getElementById("profileSetupCard");
+    setupCard.style.display = "block";
+
+    document.getElementById("profileSaveBtn").addEventListener("click", async () => {
+      const name = document.getElementById("profileName").value.trim();
+      const whatsapp = document.getElementById("profileWhatsapp").value.trim();
+      const msg = document.getElementById("profileMsg");
+      msg.innerHTML = "";
+      if (!name || !whatsapp) {
+        msg.innerHTML = `<div class="error-box">Both fields are required.</div>`;
+        return;
+      }
+      const { error } = await sb.auth.updateUser({ data: { full_name: name, whatsapp } });
+      if (error) {
+        msg.innerHTML = `<div class="error-box">${error.message}</div>`;
+        return;
+      }
+      setupCard.style.display = "none";
+      document.getElementById("poForm").style.display = "block";
+      lockRequestedBy(name, whatsapp);
+    });
   }
 })();
 
