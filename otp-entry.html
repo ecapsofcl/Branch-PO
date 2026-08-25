@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Enter OTP</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="wrap" style="max-width: 420px;">
+  <header class="top" style="justify-content:center; border-bottom:none;">
+    <div class="brand">
+      <img src="assets/logo.png" alt="eCAPS" class="logo" />
+    </div>
+  </header>
+
+  <div class="card" id="content">
+    <p class="section-title">Confirm your decision</p>
+    <p class="note">You already approved or rejected this PO in WhatsApp. Enter the OTP sent to your WhatsApp and email to confirm it's really you — this is your digital signature.</p>
+    <div class="otp-row">
+      <input id="otpInput" type="text" inputmode="numeric" maxlength="6" placeholder="000000" />
+      <button class="primary" id="verifyBtn">Confirm</button>
+    </div>
+    <div id="msg"></div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const token = params.get("token");
+
+document.getElementById("verifyBtn").addEventListener("click", async () => {
+  const otp = document.getElementById("otpInput").value.trim();
+  const msg = document.getElementById("msg");
+  msg.innerHTML = "";
+
+  if (!token) {
+    msg.innerHTML = `<div class="error-box">Missing link token.</div>`;
+    return;
+  }
+
+  try {
+    const res = await fetch(`${window.PO_CONFIG.SUPABASE_URL}/functions/v1/verify-otp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${window.PO_CONFIG.SUPABASE_ANON_KEY}`,
+        "apikey": window.PO_CONFIG.SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ reviewToken: token, otp }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Verification failed");
+    msg.innerHTML = `<div class="success-box">Confirmed: ${data.finalStatus}. The requester has been notified.</div>`;
+    document.getElementById("otpInput").disabled = true;
+    document.getElementById("verifyBtn").disabled = true;
+  } catch (err) {
+    msg.innerHTML = `<div class="error-box">${err.message}</div>`;
+  }
+});
+</script>
+</body>
+</html>
