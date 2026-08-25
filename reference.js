@@ -22,6 +22,7 @@ const BRANCH_PEOPLE = {
     { name: "Rajaram V (Branch Head)", email: "rajaram@caps.in", whatsapp: "919842273010" },
     { name: "Krishna Kumar", email: "krishna@caps.in", whatsapp: "919942922997" },
     { name: "Gnanaprakasam", email: "gps@caps.in", whatsapp: "919942922668" },
+    { name: "Anitha", email: "info@caps.in", whatsapp: "916369141027" },
   ],
   COIMBATORE: [
     { name: "Rajaram V (Branch Head)", email: "rajaram@caps.in", whatsapp: "919842273010" },
