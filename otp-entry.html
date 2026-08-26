@@ -13,7 +13,6 @@
       <img src="assets/logo.png" alt="eCAPS" class="logo" />
     </div>
   </header>
-
   <div class="card" id="content">
     <p class="section-title">Confirm your decision</p>
     <p class="note">You already approved or rejected this PO in WhatsApp. Enter the OTP sent to your WhatsApp and email to confirm it's really you — this is your digital signature.</p>
@@ -22,9 +21,13 @@
       <button class="primary" id="verifyBtn">Confirm</button>
     </div>
     <div id="msg"></div>
+    <p class="note" style="margin-top:16px;">
+      Didn't get it, or did the code expire?
+      <button id="resendBtn" type="button" style="background:none;border:none;padding:0;color:#0f6b5c;text-decoration:underline;cursor:pointer;font:inherit;">Resend OTP</button>
+    </p>
+    <div id="resendMsg"></div>
   </div>
 </div>
-
 <script src="config.js"></script>
 <script>
 const params = new URLSearchParams(window.location.search);
@@ -34,12 +37,10 @@ document.getElementById("verifyBtn").addEventListener("click", async () => {
   const otp = document.getElementById("otpInput").value.trim();
   const msg = document.getElementById("msg");
   msg.innerHTML = "";
-
   if (!token) {
     msg.innerHTML = `<div class="error-box">Missing link token.</div>`;
     return;
   }
-
   try {
     const res = await fetch(`${window.PO_CONFIG.SUPABASE_URL}/functions/v1/verify-otp`, {
       method: "POST",
@@ -55,8 +56,40 @@ document.getElementById("verifyBtn").addEventListener("click", async () => {
     msg.innerHTML = `<div class="success-box">Confirmed: ${data.finalStatus}. The requester has been notified.</div>`;
     document.getElementById("otpInput").disabled = true;
     document.getElementById("verifyBtn").disabled = true;
+    document.getElementById("resendBtn").disabled = true;
   } catch (err) {
     msg.innerHTML = `<div class="error-box">${err.message}</div>`;
+  }
+});
+
+document.getElementById("resendBtn").addEventListener("click", async () => {
+  const resendMsg = document.getElementById("resendMsg");
+  const resendBtn = document.getElementById("resendBtn");
+  resendMsg.innerHTML = "";
+  if (!token) {
+    resendMsg.innerHTML = `<div class="error-box">Missing link token.</div>`;
+    return;
+  }
+  resendBtn.disabled = true;
+  resendBtn.textContent = "Sending...";
+  try {
+    const res = await fetch(`${window.PO_CONFIG.SUPABASE_URL}/functions/v1/resend-otp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${window.PO_CONFIG.SUPABASE_ANON_KEY}`,
+        "apikey": window.PO_CONFIG.SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ reviewToken: token }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Could not resend OTP");
+    resendMsg.innerHTML = `<div class="success-box">A new OTP has been sent to your WhatsApp and email.</div>`;
+  } catch (err) {
+    resendMsg.innerHTML = `<div class="error-box">${err.message}</div>`;
+  } finally {
+    resendBtn.disabled = false;
+    resendBtn.textContent = "Resend OTP";
   }
 });
 </script>
