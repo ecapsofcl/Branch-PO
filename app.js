@@ -138,7 +138,7 @@ function sumMismatchWarning(overallStock, bucketValues) {
   const lowerBound = overallStock - SUM_TOLERANCE_LOWER;
   const upperBound = overallStock + SUM_TOLERANCE_UPPER;
   if (sum < lowerBound || sum > upperBound) {
-    return `Bucket values add up to ${sum.toFixed(2)}, but Overall stock value is ${overallStock.toFixed(2)}. These should match (a little rounding — up to 1 lower or 2 higher — is fine).`;
+    return `<div class="warn-box">Bucket values add up to ${sum.toFixed(2)}, but Overall stock value is ${overallStock.toFixed(2)}. These should match (a little rounding — up to 1 lower or 2 higher — is fine).</div>`;
   }
   return "";
 }
@@ -156,10 +156,9 @@ function renderBucketInputs() {
     `;
     bucketInputsEl.appendChild(div);
   });
-  // (Re-)attach live-update listeners to the freshly created bucket inputs.
-  document.querySelectorAll(".bucket-value").forEach((input) => {
-    input.addEventListener("input", updatePreview);
-  });
+  // Bucket inputs are inside #poForm, so the form-level delegated listener
+  // (added further down) picks up their input events automatically —
+  // no per-input listener needs to be attached here.
 }
 productEl.addEventListener("change", renderBucketInputs);
 renderBucketInputs();
@@ -194,17 +193,80 @@ function buildPreviewTable(overallStock, bucketValues, approved, bucketLabels) {
   `;
 }
 
+// ---------- Partner name / PO document — B2B orders only ----------
+const partnerNameEl = document.getElementById("partnerName");
+const poAttachedEl = document.getElementById("poAttached");
+
+function isB2BPurpose(value) {
+  return (value || "").toLowerCase().includes("b2b");
+}
+
+function updatePartnerFieldsForPurpose() {
+  const enabled = isB2BPurpose(poPurposeEl.value);
+  partnerNameEl.disabled = !enabled;
+  poAttachedEl.disabled = !enabled;
+  if (!enabled) {
+    partnerNameEl.value = "";
+    poAttachedEl.checked = false;
+  }
+}
+
+// ---------- Stock Aging validation + Approval Preview (live) ----------
+const stockAgingCard = document.getElementById("stockAgingCard");
+const stockAgingTopBanner = document.getElementById("stockAgingTopBanner");
+const submitBtn = document.getElementById("submitBtn");
+
+function isFormComplete() {
+  const bucketInputs = Array.from(document.querySelectorAll(".bucket-value"));
+  const bucketsFilled = bucketInputs.length > 0 && bucketInputs.every((i) => i.value !== "");
+  return Boolean(
+    branchEl.value &&
+    productEl.value &&
+    vendorEl.value &&
+    poPurposeEl.value &&
+    preparedForNameEl.value &&
+    overallStockEl.value !== "" &&
+    currentOrderValueEl.value !== "" &&
+    bucketsFilled &&
+    document.getElementById("creatorName").value &&
+    document.getElementById("creatorEmail").value &&
+    document.getElementById("creatorWhatsapp").value
+  );
+}
+
 function updatePreview() {
   const overallStock = Number(overallStockEl.value || 0);
   const bucketValues = getBucketValues();
   const bucketLabels = getBucketLabels();
   const product = productEl.value;
   const poPurpose = poPurposeEl.value;
+  const currentOrderValue = Number(currentOrderValueEl.value || 0);
 
-  // Inline Lakhs-format warnings, live as the person types.
-  updateFieldWarning(overallStockEl, overallStockWarnEl);
-  updateFieldWarning(currentOrderValueEl, currentOrderValueWarnEl);
-  bucketWarnEl.textContent = sumMismatchWarning(overallStock, bucketValues);
+  // Inline Lakhs-format warnings for the two standalone fields.
+  const overallW = lakhsWarning(overallStock);
+  const currentW = lakhsWarning(currentOrderValue);
+  overallStockWarnEl.textContent = overallW;
+  currentOrderValueWarnEl.textContent = currentW;
+
+  // Combined warning box below the buckets: sum-vs-overall mismatch, plus
+  // any individual bucket that looks like a raw rupee figure.
+  const sumW = sumMismatchWarning(overallStock, bucketValues);
+  const bucketRawRupeeMsgs = bucketValues
+    .map((v, i) => {
+      const w = lakhsWarning(v);
+      return w ? `${bucketLabels[i]}: ${w}` : null;
+    })
+    .filter(Boolean);
+  const bottomMessages = [sumW, ...bucketRawRupeeMsgs].filter(Boolean);
+  bucketWarnEl.innerHTML = bottomMessages.length
+    ? `<div class="warn-box">${bottomMessages.join("<br/>")}</div>`
+    : "";
+
+  const hasStockAgingError = Boolean(overallW || currentW || bottomMessages.length);
+  stockAgingCard.classList.toggle("card-error", hasStockAgingError);
+  stockAgingTopBanner.textContent = hasStockAgingError
+    ? "Please review the values highlighted below before continuing."
+    : "";
 
   const { approved, status } = computeAutoStatus({
     overallStock, bucket1: bucketValues[0], bucket2: bucketValues[1],
@@ -223,20 +285,31 @@ function updatePreview() {
       ? "This PO will be auto-approved on submission — no director review needed."
       : "This PO will be routed to director review automatically. The director will be notified by WhatsApp and email.";
 
+  submitBtn.disabled = !(isFormComplete() && !hasStockAgingError);
+
   return { overallStock, bucketValues, bucketLabels, product, poPurpose, approved, status };
 }
 
-overallStockEl.addEventListener("input", updatePreview);
-currentOrderValueEl.addEventListener("input", updatePreview);
-productEl.addEventListener("change", updatePreview);
-poPurposeEl.addEventListener("change", updatePreview);
+// A single delegated listener covers every field in the form — including
+// bucket inputs, which are re-created on every product change — so the
+// preview, warnings, and submit-button state all stay in sync without
+// needing to re-attach listeners each time the DOM changes.
+document.getElementById("poForm").addEventListener("input", handleFormChange);
+document.getElementById("poForm").addEventListener("change", handleFormChange);
 
+function handleFormChange(e) {
+  if (e.target && e.target.id === "poPurpose") {
+    updatePartnerFieldsForPurpose();
+  }
+  updatePreview();
+}
+
+updatePartnerFieldsForPurpose();
 // Render an initial (zeroed) preview on page load so the section is never empty.
 updatePreview();
 
 document.getElementById("poForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const submitBtn = document.getElementById("submitBtn");
   const resultEl = document.getElementById("resultMsg");
   resultEl.innerHTML = "";
 
@@ -302,6 +375,7 @@ document.getElementById("poForm").addEventListener("submit", async (e) => {
       document.getElementById("creatorEmail").value = window.__lockedRequestedBy.email;
       document.getElementById("creatorWhatsapp").value = window.__lockedRequestedBy.whatsapp;
     }
+    updatePartnerFieldsForPurpose();
     updatePreview();
   } catch (err) {
     resultEl.innerHTML = `<div class="error-box">${err.message}</div>`;
