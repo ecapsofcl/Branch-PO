@@ -74,6 +74,8 @@ const bucketInputsEl = document.getElementById("bucketInputs");
 const preparedForNameEl = document.getElementById("preparedForName");
 const preparedForEmailEl = document.getElementById("preparedForEmail");
 const preparedForWhatsappEl = document.getElementById("preparedForWhatsapp");
+const overallStockEl = document.getElementById("overallStock");
+const currentOrderValueEl = document.getElementById("currentOrderValue");
 
 fillSelect(branchEl, BRANCHES, "Select branch");
 fillSelect(productEl, PRODUCTS, "Select product");
@@ -102,6 +104,45 @@ preparedForNameEl.addEventListener("change", () => {
   preparedForWhatsappEl.value = person ? person.whatsapp : "";
 });
 
+// ---------- Lakhs-format helpers ----------
+// Values here should always be entered in ₹ Lakhs (e.g. ₹12,67,873 -> 12.68).
+// Anything at or above this threshold almost certainly means someone typed
+// a raw rupee figure instead, so we surface a conversion suggestion inline
+// rather than silently accepting it.
+const RAW_RUPEE_THRESHOLD = 1000;
+
+function lakhsWarning(value) {
+  if (!value || value < RAW_RUPEE_THRESHOLD) return "";
+  const suggestion = (value / 100000).toFixed(2);
+  return `This looks like a raw rupee amount, not Lakhs. In Lakhs, ₹${value.toLocaleString("en-IN")} would be ${suggestion}. Please re-enter using Lakhs.`;
+}
+
+function updateFieldWarning(inputEl, warnEl) {
+  const value = Number(inputEl.value || 0);
+  warnEl.textContent = lakhsWarning(value);
+}
+
+const overallStockWarnEl = document.getElementById("overallStockWarn");
+const currentOrderValueWarnEl = document.getElementById("currentOrderValueWarn");
+const bucketWarnEl = document.getElementById("bucketWarn");
+
+// Bucket sum vs. overall stock value: these should match, with a small
+// tolerance for rounding — allowed to be up to 1 (Lakh) lower, or up to 2
+// (Lakh) higher, than the overall stock value.
+const SUM_TOLERANCE_LOWER = 1;
+const SUM_TOLERANCE_UPPER = 2;
+
+function sumMismatchWarning(overallStock, bucketValues) {
+  if (!overallStock) return "";
+  const sum = bucketValues.reduce((a, b) => a + b, 0);
+  const lowerBound = overallStock - SUM_TOLERANCE_LOWER;
+  const upperBound = overallStock + SUM_TOLERANCE_UPPER;
+  if (sum < lowerBound || sum > upperBound) {
+    return `Bucket values add up to ${sum.toFixed(2)}, but Overall stock value is ${overallStock.toFixed(2)}. These should match (a little rounding — up to 1 lower or 2 higher — is fine).`;
+  }
+  return "";
+}
+
 function renderBucketInputs() {
   const product = productEl.value;
   const labels = AGING_BUCKETS[product] || ["Bucket 1", "Bucket 2", "Bucket 3", "Bucket 4"];
@@ -115,6 +156,10 @@ function renderBucketInputs() {
     `;
     bucketInputsEl.appendChild(div);
   });
+  // (Re-)attach live-update listeners to the freshly created bucket inputs.
+  document.querySelectorAll(".bucket-value").forEach((input) => {
+    input.addEventListener("input", updatePreview);
+  });
 }
 productEl.addEventListener("change", renderBucketInputs);
 renderBucketInputs();
@@ -126,26 +171,48 @@ function getBucketLabels() {
   return AGING_BUCKETS[productEl.value] || ["Bucket 1", "Bucket 2", "Bucket 3", "Bucket 4"];
 }
 
-function runPreview() {
-  const overallStock = Number(document.getElementById("overallStock").value || 0);
+function buildPreviewTable(overallStock, bucketValues, approved, bucketLabels) {
+  const totalApproved = approved.reduce((a, b) => a + b, 0);
+
+  const headerCells = bucketLabels.map((l) => `<th>${l}</th>`).join("");
+
+  const stockCells = bucketValues.map((v, i) => {
+    const cls = v <= approved[i] ? "cell-ok" : "cell-warn";
+    return `<td class="${cls}">${v.toFixed(2)}</td>`;
+  }).join("");
+
+  const capCells = approved.map((v) => `<td>${v.toFixed(2)}</td>`).join("");
+
+  return `
+    <thead>
+      <tr><th></th><th>Total</th>${headerCells}</tr>
+    </thead>
+    <tbody>
+      <tr><td>Stock value</td><td class="cell-total">${overallStock.toFixed(2)}</td>${stockCells}</tr>
+      <tr><td>Approved cap</td><td class="cell-total">${totalApproved.toFixed(2)}</td>${capCells}</tr>
+    </tbody>
+  `;
+}
+
+function updatePreview() {
+  const overallStock = Number(overallStockEl.value || 0);
   const bucketValues = getBucketValues();
   const bucketLabels = getBucketLabels();
   const product = productEl.value;
   const poPurpose = poPurposeEl.value;
+
+  // Inline Lakhs-format warnings, live as the person types.
+  updateFieldWarning(overallStockEl, overallStockWarnEl);
+  updateFieldWarning(currentOrderValueEl, currentOrderValueWarnEl);
+  bucketWarnEl.textContent = sumMismatchWarning(overallStock, bucketValues);
 
   const { approved, status } = computeAutoStatus({
     overallStock, bucket1: bucketValues[0], bucket2: bucketValues[1],
     bucket3: bucketValues[2], bucket4: bucketValues[3], product, poPurpose,
   });
 
-  const table = document.getElementById("previewTable");
-  table.innerHTML = `
-    <thead><tr><th>Bucket</th>${bucketLabels.map((l) => `<th>${l}</th>`).join("")}</tr></thead>
-    <tbody>
-      <tr><td>Stock value</td>${bucketValues.map((v) => `<td>${v.toFixed(2)}</td>`).join("")}</tr>
-      <tr><td>Approved cap</td>${approved.map((v) => `<td>${v.toFixed(2)}</td>`).join("")}</tr>
-    </tbody>
-  `;
+  document.getElementById("previewTable").innerHTML =
+    buildPreviewTable(overallStock, bucketValues, approved, bucketLabels);
 
   const statusEl = document.getElementById("previewStatus");
   statusEl.textContent = status;
@@ -156,11 +223,16 @@ function runPreview() {
       ? "This PO will be auto-approved on submission — no director review needed."
       : "This PO will be routed to director review automatically. The director will be notified by WhatsApp and email.";
 
-  document.getElementById("previewCard").style.display = "block";
   return { overallStock, bucketValues, bucketLabels, product, poPurpose, approved, status };
 }
 
-document.getElementById("previewBtn").addEventListener("click", runPreview);
+overallStockEl.addEventListener("input", updatePreview);
+currentOrderValueEl.addEventListener("input", updatePreview);
+productEl.addEventListener("change", updatePreview);
+poPurposeEl.addEventListener("change", updatePreview);
+
+// Render an initial (zeroed) preview on page load so the section is never empty.
+updatePreview();
 
 document.getElementById("poForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -173,7 +245,7 @@ document.getElementById("poForm").addEventListener("submit", async (e) => {
     return;
   }
 
-  const preview = runPreview();
+  const preview = updatePreview();
 
   const payload = {
     branch: branchEl.value,
@@ -186,7 +258,7 @@ document.getElementById("poForm").addEventListener("submit", async (e) => {
     overallStock: preview.overallStock,
     bucketLabels: preview.bucketLabels,
     bucketValues: preview.bucketValues,
-    currentOrderValue: Number(document.getElementById("currentOrderValue").value || 0),
+    currentOrderValue: Number(currentOrderValueEl.value || 0),
     creatorName: document.getElementById("creatorName").value,
     creatorEmail: document.getElementById("creatorEmail").value,
     creatorWhatsapp: document.getElementById("creatorWhatsapp").value,
@@ -230,7 +302,7 @@ document.getElementById("poForm").addEventListener("submit", async (e) => {
       document.getElementById("creatorEmail").value = window.__lockedRequestedBy.email;
       document.getElementById("creatorWhatsapp").value = window.__lockedRequestedBy.whatsapp;
     }
-    document.getElementById("previewCard").style.display = "none";
+    updatePreview();
   } catch (err) {
     resultEl.innerHTML = `<div class="error-box">${err.message}</div>`;
   } finally {
