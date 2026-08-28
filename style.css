@@ -140,6 +140,13 @@ table.calc-table td.cell-total { font-weight: 600; border-right: 1px solid var(-
 .success-box { background: #e5f2ee; border: 1px solid #b6d9cf; color: var(--teal-dark); padding: 12px 14px; border-radius: 8px; font-size: 13.5px; margin-top: 14px; }
 .warn-box { background: #f7edd9; border: 1px solid #e6c67f; color: var(--amber); padding: 10px 13px; border-radius: 8px; font-size: 12.5px; margin-top: 8px; }
 
+.card.card-error { border-color: var(--red); box-shadow: 0 0 0 2px rgba(163, 49, 42, 0.12); }
+.section-banner-error {
+  background: #f7e9e2; border: 1px solid #e0b4a8; color: var(--red);
+  padding: 10px 13px; border-radius: 8px; font-size: 13px; font-weight: 600; margin: 0 0 16px;
+}
+.section-banner-error:empty { display: none; margin: 0; }
+
 .otp-row { display: flex; gap: 10px; margin-top: 14px; }
 .otp-row input { max-width: 160px; letter-spacing: 0.3em; font-family: 'IBM Plex Mono', monospace; text-align: center; font-size: 18px; }
 
