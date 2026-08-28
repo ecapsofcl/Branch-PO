@@ -64,13 +64,13 @@
           <select id="poPurpose" required></select>
         </div>
         <div class="field">
-          <label for="partnerName">Partner name <span class="opt">(optional)</span></label>
+          <label for="partnerName">Partner name <span class="opt">(B2B orders only)</span></label>
           <input id="partnerName" type="text" placeholder="Distributor / partner" />
         </div>
       </div>
       <div class="field" style="margin-top:4px; margin-bottom:0;">
         <label style="display:flex; align-items:center; gap:8px; font-weight:500;">
-          <input type="checkbox" id="poAttached" /> Purchase order document attached
+          <input type="checkbox" id="poAttached" /> Purchase order document attached <span class="opt">(B2B orders only)</span>
         </label>
       </div>
     </div>
@@ -94,9 +94,10 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="stockAgingCard">
       <p class="section-title">Stock aging (in Lakhs)</p>
       <p class="note" style="margin-top:-6px; margin-bottom:14px;">Pull these figures straight from Tally's stock ageing report, entered in ₹ Lakhs — e.g. ₹12,67,873 is <strong>12.68</strong>, not 1267873 or 12,67,873.</p>
+      <div class="section-banner-error" id="stockAgingTopBanner"></div>
       <div class="grid cols-2">
         <div class="field">
           <label for="overallStock">Overall stock value <span class="req">*</span></label>
@@ -144,7 +145,7 @@
     </div>
 
     <div style="display:flex; gap:12px; align-items:center;">
-      <button type="submit" class="primary" id="submitBtn">Submit PO</button>
+      <button type="submit" class="primary" id="submitBtn" disabled>Submit PO</button>
     </div>
 
     <div id="resultMsg"></div>
