@@ -23,13 +23,11 @@ const BRANCH_PEOPLE = {
     { name: "Krishna Kumar", email: "krishna@caps.in", whatsapp: "919942922997" },
     { name: "Gnanaprakasam", email: "gps@caps.in", whatsapp: "919942922668" },
     { name: "Anitha", email: "info@caps.in", whatsapp: "916369141027" },
-    { name: "Jamuna", email: "creatives@caps.in", whatsapp: "917373558848" },
   ],
   COIMBATORE: [
     { name: "Rajaram V (Branch Head)", email: "rajaram@caps.in", whatsapp: "919842273010" },
     { name: "Krishna Kumar", email: "krishna@caps.in", whatsapp: "919942922997" },
     { name: "Gnanaprakasam", email: "gps@caps.in", whatsapp: "919942922668" },
-    { name: "Jamuna", email: "creatives@caps.in", whatsapp: "917373558848" },
   ],
   CHENNAI: [
     { name: "Rajaram V (Branch Head)", email: "rajaram@caps.in", whatsapp: "919842273010" },
@@ -38,7 +36,6 @@ const BRANCH_PEOPLE = {
     { name: "Anoop", email: "lkanoop@caps.in", whatsapp: "919942922151" },
     { name: "Senthil Kumar", email: "saleschn2@caps.in", whatsapp: "919942922192" },
     { name: "Meena", email: "supportchn@caps.in", whatsapp: "919942922900" },
-    { name: "Jamuna", email: "creatives@caps.in", whatsapp: "917373558848" },
   ],
   COCHIN: [
     { name: "Rajaram V (Branch Head)", email: "rajaram@caps.in", whatsapp: "919842273010" },
@@ -46,7 +43,6 @@ const BRANCH_PEOPLE = {
     { name: "Shiva", email: "salesekm@caps.in", whatsapp: "919961992624" },
     { name: "Sabu", email: "sabuck@caps.in", whatsapp: "918156821100" },
     { name: "Gijo", email: "cochin@caps.in", whatsapp: "919961495523" },
-    { name: "Jamuna", email: "creatives@caps.in", whatsapp: "917373558848" },
   ],
   BANGALORE: [
     { name: "Vinod R (Branch Head)", email: "vinod@caps.in", whatsapp: "919845499971" },
@@ -55,7 +51,6 @@ const BRANCH_PEOPLE = {
     { name: "Jayshree", email: "salescoblr@caps.in", whatsapp: "919844499971" },
     { name: "Santhosh", email: "channel@caps.in", whatsapp: "919844246657" },
     { name: "Krishnamurthy", email: "kmurthy@caps.in", whatsapp: "919845752409" },
-    { name: "Jamuna", email: "creatives@caps.in", whatsapp: "917373558848" },
   ],
   HYDERABAD: [
     { name: "Balaji V V (Branch Head)", email: "balaji@caps.in", whatsapp: "919052004363" },
@@ -64,12 +59,12 @@ const BRANCH_PEOPLE = {
     { name: "Srinivas G", email: "saleshyd@caps.in", whatsapp: "919052100063" },
     { name: "Naveen", email: "naveen@caps.in", whatsapp: "918978222517" },
     { name: "Prince", email: "princept@caps.in", whatsapp: "918008911044" },
-    { name: "Jamuna", email: "creatives@caps.in", whatsapp: "917373558848" },
+    { name: "Praveen", email: "praveen@caps.in", whatsapp: "919030976090" },
   ],
   VIZAG: [
     { name: "Balaji V V (Branch Head)", email: "balaji@caps.in", whatsapp: "919052004363" },
     { name: "Vijay K V", email: "vijaykv@caps.in", whatsapp: "918886000459" },
-    { name: "Jamuna", email: "creatives@caps.in", whatsapp: "917373558848" },
+    { name: "Praveen", email: "praveen@caps.in", whatsapp: "919030976090" },
   ],
 };
 
