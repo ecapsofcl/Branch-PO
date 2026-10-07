@@ -43,6 +43,8 @@ const BRANCH_PEOPLE = {
     { name: "Shiva", email: "salesekm@caps.in", whatsapp: "919961992624" },
     { name: "Sabu", email: "sabuck@caps.in", whatsapp: "918156821100" },
     { name: "Gijo", email: "cochin@caps.in", whatsapp: "919961495523" },
+    { name: "Anbuchelvan", email: "anbuchn@caps.in", whatsapp: "919942922194" },
+    { name: "Anoop", email: "lkanoop@caps.in", whatsapp: "919942922151" },
   ],
   BANGALORE: [
     { name: "Vinod R (Branch Head)", email: "vinod@caps.in", whatsapp: "919845499971" },
